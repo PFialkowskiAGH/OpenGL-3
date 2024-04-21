@@ -1,7 +1,84 @@
+async function loadFile(file) {
+	text = await file.text();
+	text=text.replaceAll('/', ' ');
+	text=text.replaceAll('\n', ' ');
+	let arrayCopy = text.split(' ');
+   const vertices = [[]]; let licz_vertices = 0;
+   const normals = [[]]; let licz_normals = 0;
+   const coords = [[]]; let licz_coords = 0;
+   const triangles = []; let licz_triangles = 0;
+   for (let i=0;i<arrayCopy.length-1;i++)
+   {
+   if (arrayCopy[i]=='v') {
+   vertices.push([]);
+   vertices[licz_vertices].push(parseFloat(arrayCopy[i+1]));
+   vertices[licz_vertices].push(parseFloat(arrayCopy[i+2]));
+   vertices[licz_vertices].push(parseFloat(arrayCopy[i+3]));
+   i+=3;
+   licz_vertices++;
+   }
+   if (arrayCopy[i]=='vn') {
+   normals.push([]);
+   normals[licz_normals].push(parseFloat(arrayCopy[i+1]));
+   normals[licz_normals].push(parseFloat(arrayCopy[i+2]));
+   normals[licz_normals].push(parseFloat(arrayCopy[i+3]));
+   i+=3;
+   licz_normals++;
+   }
+   if (arrayCopy[i]=='vt') {
+   coords.push([]);
+   coords[licz_coords].push(parseFloat(arrayCopy[i+1]));
+   coords[licz_coords].push(parseFloat(arrayCopy[i+2]));
+   i+=2;
+   licz_coords++;
+   }
+   if (arrayCopy[i]=='f') {
+   triangles.push([]);
+   for (let j=1;j<=9;j++) 
+   triangles[licz_triangles].push(parseFloat(arrayCopy[i+j]));
+   i+=9;
+   licz_triangles++;
+   }
+   }
+   let vert_array=[];
+   for (let i = 0; i < triangles.length; i++)
+   {
+   vert_array.push(vertices[triangles[i][0] - 1][0]);
+   vert_array.push(vertices[triangles[i][0] - 1][1]);
+   vert_array.push(vertices[triangles[i][0] - 1][2]);
+   vert_array.push(normals[triangles[i][2] - 1][0]);
+   vert_array.push(normals[triangles[i][2] - 1][1]);
+   vert_array.push(normals[triangles[i][2] - 1][2]);
+   vert_array.push(coords[triangles[i][1] - 1][0]);
+   vert_array.push(coords[triangles[i][1] - 1][1]);
+   vert_array.push(vertices[triangles[i][3] - 1][0]);
+   vert_array.push(vertices[triangles[i][3] - 1][1]);
+   vert_array.push(vertices[triangles[i][3] - 1][2]);
+   vert_array.push(normals[triangles[i][5] - 1][0]);
+   vert_array.push(normals[triangles[i][5] - 1][1]);
+   vert_array.push(normals[triangles[i][5] - 1][2]);
+   vert_array.push(coords[triangles[i][4] - 1][0]);
+   vert_array.push(coords[triangles[i][4] - 1][1]);
+   vert_array.push(vertices[triangles[i][6] - 1][0]);
+   vert_array.push(vertices[triangles[i][6] - 1][1]);
+   vert_array.push(vertices[triangles[i][6] - 1][2]);
+   vert_array.push(normals[triangles[i][8] - 1][0]);
+   vert_array.push(normals[triangles[i][8] - 1][1]);
+   vert_array.push(normals[triangles[i][8] - 1][2]);
+   vert_array.push(coords[triangles[i][7] - 1][0]);
+   vert_array.push(coords[triangles[i][7] - 1][1]);
+   }
+   points=triangles.length*3;
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vert_array), gl.STATIC_DRAW);
+}
+
+let points = 32;
+let gl;
+
 function start() {
 const canvas = document.getElementById("my_canvas");
 //Inicialize the GL contex
-const gl = canvas.getContext("webgl2");
+gl = canvas.getContext("webgl2");
 if (gl === null) {
 	alert("Unable to initialize WebGL. Your browser or machine may not support it.");
 	return;
@@ -52,8 +129,8 @@ const program = gl.createProgram();
 
 		void main(void)
 	   	{
-			frag_color = mix(vec4(Color, 1.0), mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.5), 0.5);
-			//frag_color = texture(texture1, TexCoord);
+			//frag_color = mix(vec4(Color, 1.0), mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.5), 0.5);
+			frag_color = texture(texture1, TexCoord);
 			//frag_color = vec4(Color, 1.0);
 		    //frag_color = vec4(1.0, 0.5, 0.25, 1.0);
 	   	}
@@ -285,7 +362,8 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); 
 };
 image2.crossOrigin = ""; 
-image2.src = 'https://images.pexels.com/photos/816608/pexels-photo-816608.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+//image2.src = 'https://images.pexels.com/photos/816608/pexels-photo-816608.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+image2.src = 'https://images.pexels.com/photos/172289/pexels-photo-172289.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
 //****************************************************************
 gl.uniform1i(gl.getUniformLocation(program, "texture2"), 1);
 
@@ -433,9 +511,9 @@ function draw(){
 			gl.colorMask(true, false, false, false);
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, texture2);
-			gl.drawArrays(gl.TRIANGLES, 0, 12);
-			gl.bindTexture(gl.TEXTURE_2D, texture1);
-			gl.drawArrays(gl.TRIANGLES, 12, 24);
+			gl.drawArrays(gl.TRIANGLES, 0, points);
+			//gl.bindTexture(gl.TEXTURE_2D, texture1);
+			//gl.drawArrays(gl.TRIANGLES, 12, 24);
 
 			gl.clear(gl.DEPH_BUFFER_BIT);
 
@@ -443,9 +521,9 @@ function draw(){
 			gl.colorMask(false, false, true, false);
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, texture2);
-			gl.drawArrays(gl.TRIANGLES, 0, 12);
-			gl.bindTexture(gl.TEXTURE_2D, texture1);
-			gl.drawArrays(gl.TRIANGLES, 12, 24);
+			gl.drawArrays(gl.TRIANGLES, 0, points);
+			//gl.bindTexture(gl.TEXTURE_2D, texture1);
+			//gl.drawArrays(gl.TRIANGLES, 12, 24);
 
 			gl.colorMask(true, true, true, true);
 
@@ -456,17 +534,17 @@ function draw(){
 			StereoProjection(-6, 6, -4.8, 4.8, 12.99, -100, 0, 13, -0.05);
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, texture2);
-			gl.drawArrays(gl.TRIANGLES, 0, 12);
-			gl.bindTexture(gl.TEXTURE_2D, texture1);
-			gl.drawArrays(gl.TRIANGLES, 12, 24);
+			gl.drawArrays(gl.TRIANGLES, 0, points);
+			//gl.bindTexture(gl.TEXTURE_2D, texture1);
+			//gl.drawArrays(gl.TRIANGLES, 12, 24);
 
 			gl.viewport(canvas.width/2, 0, canvas.width/2, canvas.height);
 			StereoProjection(-6, 6, -4.8, 4.8, 12.99, -100, 0, 13, 0.05);
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, texture2); 
-			gl.drawArrays(gl.TRIANGLES, 0, 12);
-			gl.bindTexture(gl.TEXTURE_2D, texture1);
-			gl.drawArrays(gl.TRIANGLES, 12, 24);
+			gl.drawArrays(gl.TRIANGLES, 0, points);
+			//gl.bindTexture(gl.TEXTURE_2D, texture1);
+			//gl.drawArrays(gl.TRIANGLES, 12, 24);
 
 			break;
 			
@@ -475,9 +553,9 @@ function draw(){
 			StereoProjection(-6, 6, -4.8, 4.8, 12.99, -100, 0, 13, 0);
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, texture2);
-			gl.drawArrays(gl.TRIANGLES, 0, 12);
-			gl.bindTexture(gl.TEXTURE_2D, texture1);
-			gl.drawArrays(gl.TRIANGLES, 12, 24);
+			gl.drawArrays(gl.TRIANGLES, 0, points);
+			//gl.bindTexture(gl.TEXTURE_2D, texture1);
+			//gl.drawArrays(gl.TRIANGLES, 12, 24);
 
 			break;
 	}

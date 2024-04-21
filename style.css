@@ -17,3 +17,10 @@ canvas
 	color: palevioletred;
 	font-size: 40px;
  }
+
+ input{
+	position: absolute;
+	color: palevioletred;
+	left: 2px;
+	top: 40px;
+ }
